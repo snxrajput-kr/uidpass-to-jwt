@@ -137,7 +137,7 @@ def process_token(uid, password):
     game_data.timestamp = "2025-05-29 13:11:47"
     game_data.game_name = "free fire"
     game_data.game_version = 1
-    game_data.version_code = "1.126.2"
+    game_data.version_code = "1.132.1"
     game_data.os_info = "Android OS 11 / API-30 (RKQ1.201112.002/eng.realme.20221110.193122)"
     game_data.device_type = "Handheld"
     game_data.network_provider = "JIO"
@@ -193,7 +193,7 @@ def process_token(uid, password):
     encrypted_data = encrypt_message(AES_KEY, AES_IV, serialized_data)
     hex_encrypted_data = binascii.hexlify(encrypted_data).decode('utf-8')
 
-    url = "https://loginbp.ggblueshark.com/MajorLogin"
+    url = "https://loginbp.ppmainecoonghj.com/MajorLogin"
     headers = {
         "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 12; ASUS_Z01QD Build/PI)",
         'Connection': "Keep-Alive",
@@ -252,7 +252,7 @@ def process_access_token(access_token, uid=None, platform_type=4):
     game_data.timestamp = "2025-05-29 13:11:47"
     game_data.game_name = "free fire"
     game_data.game_version = 1
-    game_data.version_code = "1.126.2"
+    game_data.version_code = "1.132.1"
     game_data.os_info = "Android OS 11 / API-30 (RKQ1.201112.002/eng.realme.20221110.193122)"
     game_data.device_type = "Handheld"
     game_data.network_provider = "JIO"
@@ -308,7 +308,7 @@ def process_access_token(access_token, uid=None, platform_type=4):
     encrypted_data = encrypt_message(AES_KEY, AES_IV, serialized_data)
     hex_encrypted_data = binascii.hexlify(encrypted_data).decode('utf-8')
 
-    url = "https://loginbp.ggblueshark.com/MajorLogin"
+    url = "https://loginbp.ppmainecoonghj.com/MajorLogin"
     headers = {
         "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 12; ASUS_Z01QD Build/PI)",
         'Connection': "Keep-Alive",
