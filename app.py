@@ -331,6 +331,7 @@ def generate_jwt_token(uid: str, password: str):
             "region": msg.get("notiRegion", ""),
             "serverUrl": msg.get("serverUrl", ""),
             "token": f"{msg.get('token', '')}",
+            "access_token": token_val,
             "open_id": open_id,
             "uid": uid,
         }
